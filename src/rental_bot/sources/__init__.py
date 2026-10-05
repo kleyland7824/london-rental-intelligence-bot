@@ -1,0 +1,1 @@
+"""Authorized listing source adapters."""

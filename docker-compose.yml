@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: rental_bot
+      POSTGRES_USER: rental_bot
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rental_bot}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rental_bot -d rental_bot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://rental_bot:${POSTGRES_PASSWORD:-rental_bot}@db:5432/rental_bot
+      DETAIL_REVIEW_ENABLED: ${DETAIL_REVIEW_ENABLED:-false}
+      DETAIL_ALLOWED_DOMAINS: ${DETAIL_ALLOWED_DOMAINS:-}
+      DETAIL_PROVIDER_AUTHORIZED_DOMAINS: ${DETAIL_PROVIDER_AUTHORIZED_DOMAINS:-}
+      DETAIL_PAGES_PER_CYCLE: ${DETAIL_PAGES_PER_CYCLE:-0}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["rental-bot", "worker"]
+    restart: unless-stopped
+
+  modern-web:
+    build:
+      context: .
+      dockerfile: Dockerfile.modern-web
+    environment:
+      DATABASE_URL: postgresql://rental_bot:${POSTGRES_PASSWORD:-rental_bot}@db:5432/rental_bot
+      MAX_MONTHLY_RENT: ${MAX_MONTHLY_RENT:-}
+      MIN_BEDROOMS: ${MIN_BEDROOMS:-}
+      AREAS: ${AREAS:-}
+      MAX_COMMUTE_MINUTES: ${MAX_COMMUTE_MINUTES:-}
+    command: ["uvicorn", "rental_bot.api:app", "--host", "0.0.0.0", "--port", "8502"]
+    ports:
+      - "127.0.0.1:8502:8502"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

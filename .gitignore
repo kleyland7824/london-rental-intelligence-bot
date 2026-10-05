@@ -1,0 +1,28 @@
+.env
+*.swp
+*.swo
+.pytest_cache/
+.venv/
+__pycache__/
+*.egg-info/
+*.py[cod]
+coverage.xml
+htmlcov/
+frontend/node_modules/
+frontend/dist/
+
+# Local deployment override and historical, deployment-specific notes.
+docker-compose.override.yml
+FRONTEND_MIGRATION_PLAN.md
+IMPLEMENTATION_PLAN.md
+LISTING_QUALITY_PLAN.md
+PROJECT_SPEC.md
+PUBLIC_RELEASE_PLAN.md
+
+# Local data, backups, and transient outputs.
+*.log
+*.dump
+*.sql.gz
+backups/
+data/
+*.eml
